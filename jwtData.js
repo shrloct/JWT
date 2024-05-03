@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const secretkey = 'smktibazma1992';
+
 function createToken(id, nama, kelas, alamat, hobi) {
     const data = { id, nama, kelas, alamat, hobi };
     return jwt.sign(data, secretkey);
