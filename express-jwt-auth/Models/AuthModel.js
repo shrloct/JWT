@@ -1,9 +1,9 @@
-const connection = require('./Config/Connection');
+const connection = require('../config/connection');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // Register
-async function regiterUser(name, email, password, phone) {
+async function registerUser(name, email, password, phone) {
     try {
         // Cek apakah email ini sudah terdaftar / belum?
         const [existingEmailUser] = await connection.query('SELECT * FROM user WHERE email = ?', [email]);
@@ -33,4 +33,4 @@ async function regiterUser(name, email, password, phone) {
 // Login
 
 
-module.exports = { regiterUser }
+module.exports = { registerUser }

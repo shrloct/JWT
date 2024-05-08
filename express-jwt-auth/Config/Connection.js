@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 const connection = mysql.createPool({
     host: 'localhost',
@@ -6,7 +6,7 @@ const connection = mysql.createPool({
     database: 'bazma_jwt_auth',
     password: '',
     port: ' 3306',
-    waitForConnections: 'false',
+    waitForConnections: false,
     connectionLimit: 10,
     queueLimit: 0
 });
