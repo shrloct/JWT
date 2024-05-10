@@ -26,8 +26,6 @@ async function registerUser(name, email, password, phone) {
     }
 }
 
-
-
 // login
 async function loginUser(email, password) {
     try {
@@ -51,9 +49,7 @@ async function loginUser(email, password) {
     }
 }
 
-
-
-// get me
+// getMe
 async function getMe(token) {
     try {
         const decoded = jwt.verify(token.replace('Bearer ', ''), 'bazmaSecretKey');
