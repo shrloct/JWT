@@ -17,5 +17,9 @@ const verifyToken = (req, res, next) => {
                 message: "Invalid Token, Permission Denied"
             })
         }
+        req.user = user;
+        next();
     })
 }
+
+module.exports = verifyToken;
