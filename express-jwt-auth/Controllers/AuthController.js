@@ -31,6 +31,12 @@ async function register(req, res) {
             res.status(201).json({
                 success: result.success,
                 message: result.message,
+                data: {
+                    id: result.data.insertId,
+                    name: result.data.name,
+                    email: result.email,
+                    password: result.password
+                }
             })
         } else {
             res.status(500).json({ error: result.message });
@@ -50,7 +56,8 @@ async function register(req, res) {
 async function login(req, res) {
     const validations = [
         body('email').notEmpty().withMessage('Email harus diisi'),
-        body('password').notEmpty().withMessage('Password harus diisi')
+        body('password').notEmpty().withMessage('Password harus diisi'),
+        body('phone').notEmpty().withMessage('Phone harus diisi')
     ];
     await Promise.all(validations.map(validation => validation.run(req)));
     const errors = validationResult(req);
@@ -91,5 +98,27 @@ async function me(req, res) {
     }
 }
 
+// logout dari authModel
+async function logout(req, res) {
+    try {
+        const token = req.headers.authorization;
+        const result = await logoutUser(token);
+        if (!result) {
+            return res.status(404).json({ error: true, message: 'User not found' });
+        }
 
-module.exports = { register, login, me }
+        if (result.success) {
+            res.status(201).json({
+                success: result.success,
+                message: result.message,
+            })
+        } else {
+            res.status(500).json({ error: result.message })
+        }
+    }
+    catch (error) {
+        console.error(error);
+    }
+}
+
+module.exports = { register, login, me, logout }

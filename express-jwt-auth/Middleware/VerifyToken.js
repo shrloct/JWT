@@ -13,12 +13,12 @@ const verifyToken = (req, res, next) => {
 
     jwt.verify(token, 'bazmaSecretKey', (error, decoded) => {
         if (error) {
-            return res.status(403).json({
+            return res.status(401).json({
                 message: "Invalid Token, Permission Denied"
             })
         }
-        req.user = user;
-        next();
+        req.user = decoded;
+        return next();
     })
 }
 

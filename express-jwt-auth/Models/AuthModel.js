@@ -6,18 +6,19 @@ const jwt = require('jsonwebtoken');
 async function registerUser(name, email, password, phone) {
     try {
         // cek apakah email ini sudah tercaftar / belum
-        const [existingUser] = await connection.query('SELECT * FROM  user where email = ?', [email])
-        if (existingUser.length > 0)
-            throw new Error('email already exists')
+        const [existingUser] = await connection.query('SELECT * FROM  user where email = ?', [email]);
+        if (existingUser.length > 0) throw new Error('email already exists')
         //  kita hash password agar tidak dapat di baca artinya pastikan yang kita tulis passwordnya hapal 
         const hashPassword = await bcrypt.hash(password, 16)
 
         // kalau tidak ada maka kita boleh buat email tersebut 
         const [newUser] = await connection.query('INSERT INTO user (name,email,password,phone) VALUES (?,?,?,?)', [name, email, hashPassword, phone])
+        const [createdUser] = await connection.query('SELECT * FROM user WHERE id = ?', [newUser.insertId]);
 
         return {
             success: true,
-            message: 'berhasil membuat akun'
+            message: 'berhasil membuat akun',
+            data: createdUser[0]
         }
     }
     catch (error) {
@@ -53,17 +54,29 @@ async function loginUser(email, password) {
 async function getMe(token) {
     try {
         const decoded = jwt.verify(token.replace('Bearer ', ''), 'bazmaSecretKey');
-        const userData = {
-            id: decoded.id,
-            username: decoded.username,
-            email: decoded.email,
-            password: decoded.password
-        }
-        return { success: true, message: 'User data retrieved successfully', data: userData };
+
+        return { success: true, message: 'User data retrieved successfully', data: decoded };
     } catch (error) {
         console.error(error);
         return { success: false, message: error.message };
     }
 }
 
-module.exports = { registerUser, loginUser, getMe }
+// logout
+
+async function logoutUser(token) {
+    try {
+        const decoded = jwt.verify(token, 'bazmaSecretKey');
+        jwt.sign({ id: decoded.id }, 'bazmaSecretKey', {
+            expiresIn: '7d'
+        });
+
+        return { success: true, message: 'Logout successful' };
+
+    }
+    catch (error) {
+        throw new Error(error);
+    }
+}
+
+module.exports = { registerUser, loginUser, getMe, logoutUser }
