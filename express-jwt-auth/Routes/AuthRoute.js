@@ -6,7 +6,7 @@ const verifyToken = require('../Middleware/VerifyToken');
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/getme', me);
+router.get('/getme', verifyToken, me);
 router.post('/logout', verifyToken, logout);
 
 

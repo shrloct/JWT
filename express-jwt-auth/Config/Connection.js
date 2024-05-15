@@ -5,10 +5,10 @@ const connection = mysql.createPool({
     user: 'root',
     database: 'bazma_jwt_auth',
     password: '',
-    port: ' 3306',
+    port: 3306,
     waitForConnections: false,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
 });
 
 module.exports = connection;

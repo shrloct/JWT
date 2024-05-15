@@ -3,16 +3,19 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const AuthRoute = require('./Routes/AuthRoute')
+// Routes
+const AuthRoute = require('./Routes/AuthRoute');
+const TodoRoute = require('./Routes/TodoRoute');
+app.use("/api/auth", AuthRoute);
+app.use("/api", TodoRoute);
 
-app.use('/api/auth', AuthRoute)
-
-const PORT = 3000 || process.env.PORT;
+// Server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    // Menjalankan PORT
     console.log(`Server is running on port ${PORT}`);
 });

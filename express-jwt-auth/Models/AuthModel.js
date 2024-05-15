@@ -1,64 +1,98 @@
-const connection = require('../config/connection');
+const connection = require('../config/connection')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// register
 
 async function registerUser(name, email, password, phone) {
     try {
-        // cek apakah email ini sudah tercaftar / belum
-        const [existingUser] = await connection.query('SELECT * FROM  user where email = ?', [email]);
-        if (existingUser.length > 0) throw new Error('email already exists')
-        //  kita hash password agar tidak dapat di baca artinya pastikan yang kita tulis passwordnya hapal 
-        const hashPassword = await bcrypt.hash(password, 16)
+        // cek apakah email ini sudah terdaftar / belum?
+        const [existingEmailUser] = await connection.query('select * from user where email =?', [email]);
+        if (existingEmailUser.length > 0) throw new Error('Email already exists');
+        // cek apakah password yang dimasukkan benar?
+        const hashedPassword = await bcrypt.hash(password, 16);
+        // kalau tidak ada maka kita boleh buat email tersebut.
+        const [newUser] = await connection.query(
+            'insert into user (name, email, password, phone) values (?, ? , ? , ?)', [name, email, hashedPassword, phone]);
 
-        // kalau tidak ada maka kita boleh buat email tersebut 
-        const [newUser] = await connection.query('INSERT INTO user (name,email,password,phone) VALUES (?,?,?,?)', [name, email, hashPassword, phone])
         const [createdUser] = await connection.query('SELECT * FROM user WHERE id = ?', [newUser.insertId]);
 
         return {
             success: true,
-            message: 'berhasil membuat akun',
+            message: 'User has been created',
             data: createdUser[0]
         }
     }
     catch (error) {
-        throw new Error(error)
-
+        throw new Error(error);
     }
 }
+
 
 // login
+
 async function loginUser(email, password) {
     try {
-        const [user] = await connection.query('SELECT * FROM user WHERE email = ?', [email]);
-        if (user.length === 0) {
-            throw new Error('User not found');
+        // Cek apakah email ini sudah terdaftar atau belum
+        const [existingEmailUser] = await connection.query('SELECT * FROM user WHERE email = ?', [email]);
+        if (existingEmailUser.length === 0) {
+            throw new Error('Email does not exist');
         }
-        const isPasswordValid = await bcrypt.compare(password, user[0].password);
+
+        const user = existingEmailUser[0];
+
+        // Periksa apakah password yang dimasukkan benar
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid password');
+            throw new Error('Invalid email or password');
         }
-        // generate token
-        const createToken = jwt.sign({ email: user[0].email, password: user[0].password }, 'bazmaSecretKey');
-        return { success: true, message: 'Login berhasil', createToken };
+
+        // Jika email dan password cocok, buat token JWT
+        const token = jwt.sign({ id: user.id }, 'bazmaSecretKey', {
+            expiresIn: '7h'
+        });
+
+        // Kembalikan informasi user dan token
+        // await connection.query('UPDATE user SET token = ? WHERE id = ?', [token, user.id]);
+
+        return {
+            success: true,
+            message: 'User has been logged in',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            },
+            token
+        };
     } catch (error) {
         console.error(error);
-        return {
-            success: false,
-            message: error.message
-        };
+        throw new Error('Login failed');
     }
 }
 
-// getMe
+// get me dengan jwt
+
 async function getMe(token) {
     try {
-        const decoded = jwt.verify(token.replace('Bearer ', ''), 'bazmaSecretKey');
+        const decoded = jwt.verify(token, 'bazmaSecretKey');
+        const [checkUser] = await connection.query('select * from user where id =?', [decoded.id]);
 
-        return { success: true, message: 'User data retrieved successfully', data: decoded };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: error.message };
+        const user = checkUser[0];
+        return {
+            success: true,
+            message: 'User data fetched successfully',
+            data: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            }
+        }
+    }
+    catch (error) {
+        throw new Error(error);
     }
 }
 
